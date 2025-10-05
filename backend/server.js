@@ -11,7 +11,15 @@ const adminRoutes = require('./routes/admin');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: [
+        'http://localhost:3000',
+        'https://notes-sharing-frontend.vercel.app',
+        'https://notes-sharing.vercel.app',
+        process.env.CORS_ORIGIN
+    ].filter(Boolean),
+    credentials: true
+}));
 app.use(express.json());
 
 // Routes
