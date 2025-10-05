@@ -17,17 +17,25 @@ const Home = () => {
     try {
       const response = await api.get('/notes/all');
       console.log('Fetched notes:', response.data);
-      setNotes(response.data);
       
-      // Extract unique subjects
-      const uniqueSubjects = [...new Set(response.data.map(note => note.subject))];
-      setSubjects(uniqueSubjects);
+      if (response.data && Array.isArray(response.data)) {
+        setNotes(response.data);
+        
+        // Extract unique subjects safely
+        const uniqueSubjects = [...new Set(response.data.map(note => note.subject).filter(Boolean))];
+        setSubjects(uniqueSubjects);
+      } else {
+        setNotes([]);
+        setSubjects([]);
+      }
       
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch notes:', error);
-      alert('Failed to fetch notes: ' + error.message);
+      setNotes([]);
+      setSubjects([]);
       setLoading(false);
+      // Don't show alert immediately, just log for now
     }
   };
 

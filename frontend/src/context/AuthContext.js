@@ -17,12 +17,21 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            const userData = JSON.parse(localStorage.getItem('user') || '{}');
-            setUser(userData);
-            setIsAdmin(userData.adminId === '11663645');
+        try {
+            const token = localStorage.getItem('token');
+            if (token) {
+                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                const userDataString = localStorage.getItem('user');
+                if (userDataString && userDataString !== 'undefined') {
+                    const userData = JSON.parse(userDataString);
+                    setUser(userData);
+                    setIsAdmin(userData?.adminId === '11663645');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading user data:', error);
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
         }
         setLoading(false);
     }, []);
@@ -34,13 +43,20 @@ export const AuthProvider = ({ children }) => {
                 email,
                 password
             });
-            setUser(response.data.user);
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user', JSON.stringify(response.data.user));
-            api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+            
+            if (response.data && response.data.user) {
+                setUser(response.data.user);
+                setIsAdmin(response.data.user?.adminId === '11663645');
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+                api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+            }
+            
             return response.data;
         } catch (error) {
-            throw error.response.data;
+            console.error('Registration error:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
+            throw { message: errorMessage };
         }
     };
 
@@ -50,14 +66,20 @@ export const AuthProvider = ({ children }) => {
                 email,
                 password
             });
-            setUser(response.data.user);
-            setIsAdmin(response.data.user.adminId === '11663645');
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user', JSON.stringify(response.data.user));
-            api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+            
+            if (response.data && response.data.user) {
+                setUser(response.data.user);
+                setIsAdmin(response.data.user?.adminId === '11663645');
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+                api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+            }
+            
             return response.data;
         } catch (error) {
-            throw error.response.data;
+            console.error('Login error:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Login failed';
+            throw { message: errorMessage };
         }
     };
 
@@ -67,14 +89,20 @@ export const AuthProvider = ({ children }) => {
                 adminId,
                 password
             });
-            setUser(response.data.user);
-            setIsAdmin(true);
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user', JSON.stringify(response.data.user));
-            api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+            
+            if (response.data && response.data.user) {
+                setUser(response.data.user);
+                setIsAdmin(true);
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+                api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+            }
+            
             return response.data;
         } catch (error) {
-            throw error.response.data;
+            console.error('Admin login error:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Admin login failed';
+            throw { message: errorMessage };
         }
     };
 
