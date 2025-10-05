@@ -38,11 +38,11 @@ const upload = multer({
   }
 });
 
-// Get all notes (public access)
+// Get all notes (public access) - both routes for compatibility
 router.get('/', async (req, res) => {
   try {
     const { subject, search } = req.query;
-    let query = { isApproved: true };
+    let query = {}; // Remove isApproved filter for now
 
     if (subject) {
       query.subject = { $regex: subject, $options: 'i' };
@@ -63,6 +63,38 @@ router.get('/', async (req, res) => {
     notes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     console.log(`Found ${notes.length} notes`);
+    res.json(notes);
+  } catch (error) {
+    console.error('Error fetching notes:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Alternative route for /all
+router.get('/all', async (req, res) => {
+  try {
+    const { subject, search } = req.query;
+    let query = {}; // Remove isApproved filter for now
+
+    if (subject) {
+      query.subject = { $regex: subject, $options: 'i' };
+    }
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const notes = await Note.find(query)
+      .populate('uploadedBy', 'name')
+      .lean(); // Add lean() for better performance
+
+    // Sort manually after fetching (Azure Cosmos DB indexing issue)
+    notes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    console.log(`Found ${notes.length} notes from /all endpoint`);
     res.json(notes);
   } catch (error) {
     console.error('Error fetching notes:', error);
