@@ -11,7 +11,7 @@ const AdminLogin = () => {
     password: ''
   });
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { adminLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -26,12 +26,12 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      const response = await api.post('/auth/admin-login', formData);
-      login(response.data.token, response.data.user);
+      await adminLogin(formData.adminId, formData.password);
       toast.success('Admin login successful!');
       navigate('/admin');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Admin login failed');
+      console.error('Admin login error:', error);
+      toast.error(error.message || 'Admin login failed');
     } finally {
       setLoading(false);
     }

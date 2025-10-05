@@ -13,7 +13,7 @@ const Register = () => {
     confirmPassword: ''
   });
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -34,17 +34,14 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await api.post('/auth/register', {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password
-      });
+      // Use the register function from AuthContext
+      await register(formData.name, formData.email, formData.password);
       
-      login(response.data.token, response.data.user);
       toast.success('Registration successful!');
       navigate('/');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed');
+      console.error('Registration error:', error);
+      toast.error(error.message || 'Registration failed');
     } finally {
       setLoading(false);
     }

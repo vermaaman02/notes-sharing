@@ -40,33 +40,55 @@ const Home = () => {
   };
 
   const handleDownload = async (noteId) => {
+    if (!noteId) {
+      alert('Cannot download: Note ID is missing');
+      return;
+    }
+    
     try {
       const response = await api.get(`/notes/download/${noteId}`, {
         responseType: 'blob'
       });
       
-      const note = notes.find(n => n._id === noteId);
+      if (!response || !response.data) {
+        throw new Error('No data received from server');
+      }
+      
+      const note = notes.find(n => n && n._id === noteId);
+      if (!note) {
+        throw new Error('Note information not found');
+      }
+      
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', note.fileName);
+      link.setAttribute('download', note.fileName || `note-${noteId}.pdf`);
       document.body.appendChild(link);
       link.click();
-      link.remove();
+      
+      // Clean up
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        link.remove();
+      }, 100);
       
       // Update download count
       fetchNotes();
       alert('Download started');
     } catch (error) {
       console.error('Download failed:', error);
-      alert('Failed to download file');
+      alert('Failed to download file: ' + (error.message || 'Unknown error'));
     }
   };
 
   const filteredNotes = notes.filter(note => {
+    // Only process notes with required fields
+    if (!note || !note.title || !note.description) {
+      return false;
+    }
     const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          note.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSubject = !subjectFilter || note.subject === subjectFilter;
+    const matchesSubject = !subjectFilter || (note.subject && note.subject === subjectFilter);
     return matchesSearch && matchesSubject;
   });
 
@@ -121,15 +143,16 @@ const Home = () => {
           ) : (
             <div className="notes-grid">
               {filteredNotes.map(note => (
-                <div key={note._id} className="note-card">
-                  <h3>{note.title}</h3>
+                <div key={note._id || `note-${Math.random()}`} className="note-card">
+                  <h3>{note.title || 'Untitled Note'}</h3>
                   <p><strong>Subject:</strong> {note.subject || 'N/A'}</p>
-                  <p><strong>Description:</strong> {note.description}</p>
-                  <p><strong>Uploaded by:</strong> {note.uploadedBy?.name || 'Unknown'}</p>
+                  <p><strong>Description:</strong> {note.description || 'No description available'}</p>
+                  <p><strong>Uploaded by:</strong> {(note.uploadedBy && note.uploadedBy.name) ? note.uploadedBy.name : 'Unknown'}</p>
                   <p><strong>Downloads:</strong> {note.downloads || 0}</p>
                   <button 
-                    onClick={() => handleDownload(note._id)}
+                    onClick={() => note._id && handleDownload(note._id)}
                     className="btn btn-primary"
+                    disabled={!note._id}
                   >
                     Download
                   </button>

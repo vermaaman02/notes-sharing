@@ -26,12 +26,13 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await api.post('/auth/login', formData);
-      login(response.data.token, response.data.user);
+      // Use the login function from AuthContext directly
+      await login(formData.email, formData.password);
       toast.success('Login successful!');
       navigate('/');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Login failed');
+      console.error('Login error:', error);
+      toast.error(error.message || 'Login failed');
     } finally {
       setLoading(false);
     }
