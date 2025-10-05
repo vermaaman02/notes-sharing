@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { toast } from 'react-toastify';
-import NoteCard from '../components/NoteCard';
 import './Home.css';
 
 const Home = () => {
@@ -18,6 +16,7 @@ const Home = () => {
   const fetchNotes = async () => {
     try {
       const response = await api.get('/notes/all');
+      console.log('Fetched notes:', response.data);
       setNotes(response.data);
       
       // Extract unique subjects
@@ -26,7 +25,8 @@ const Home = () => {
       
       setLoading(false);
     } catch (error) {
-      toast.error('Failed to fetch notes');
+      console.error('Failed to fetch notes:', error);
+      alert('Failed to fetch notes: ' + error.message);
       setLoading(false);
     }
   };
@@ -48,9 +48,10 @@ const Home = () => {
       
       // Update download count
       fetchNotes();
-      toast.success('Download started');
+      alert('Download started');
     } catch (error) {
-      toast.error('Failed to download file');
+      console.error('Download failed:', error);
+      alert('Failed to download file');
     }
   };
 
@@ -112,11 +113,19 @@ const Home = () => {
           ) : (
             <div className="notes-grid">
               {filteredNotes.map(note => (
-                <NoteCard
-                  key={note._id}
-                  note={note}
-                  onDownload={handleDownload}
-                />
+                <div key={note._id} className="note-card">
+                  <h3>{note.title}</h3>
+                  <p><strong>Subject:</strong> {note.subject || 'N/A'}</p>
+                  <p><strong>Description:</strong> {note.description}</p>
+                  <p><strong>Uploaded by:</strong> {note.uploadedBy?.name || 'Unknown'}</p>
+                  <p><strong>Downloads:</strong> {note.downloads || 0}</p>
+                  <button 
+                    onClick={() => handleDownload(note._id)}
+                    className="btn btn-primary"
+                  >
+                    Download
+                  </button>
+                </div>
               ))}
             </div>
           )}

@@ -1,7 +1,5 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
@@ -52,11 +50,7 @@ function App() {
               />
             </Routes>
           </main>
-          <ToastContainer 
-            position="top-right" 
-            autoClose={3000} 
-            hideProgressBar={false}
-          />
+
         </div>
       </Router>
     </AuthProvider>
